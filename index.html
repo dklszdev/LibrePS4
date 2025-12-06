@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibrePS4 - Advanced Exploit Suite</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (window.applicationCache.status == '0') {
+            window.location.replace("cache.html");
+        }
+    </script>
+</head>
+
+<body>
+    <header>
+        <a href="index.html" class="logo">LibrePS4</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="about.html" data-jslicense="1">About</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Status Dashboard -->
+        <div class="status-dashboard">
+            <div class="status-card" id="card-webkit">
+                <span class="card-title">Exploit Chain</span>
+                <span class="card-value">
+                    <div class="indicator" id="ind-webkit"></div>
+                    <span id="text-webkit">Waiting...</span>
+                </span>
+            </div>
+            <div class="status-card" id="card-kernel">
+                <span class="card-title">Kernel Access</span>
+                <span class="card-value">
+                    <div class="indicator" id="ind-kernel"></div>
+                    <span id="text-kernel">Pending</span>
+                </span>
+            </div>
+            <div class="status-card" id="card-goldhen">
+                <span class="card-title">GoldHEN</span>
+                <span class="card-value">
+                    <div class="indicator" id="ind-goldhen"></div>
+                    <span id="text-goldhen">Not Loaded</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="hero">
+            <h1>LibrePS4 Project</h1>
+            <p>Una versión de PSFree llamada LibrePS4 con mejor interfaz, más responsiva y estable.</p>
+        </div>
+
+        <!-- Console Output -->
+        <div class="console-wrapper">
+            <div class="console-header">
+                <div class="traffic-lights">
+                    <div class="light red"></div>
+                    <div class="light yellow"></div>
+                    <div class="light green"></div>
+                </div>
+                <span class="console-title">system_log --verbose</span>
+            </div>
+            <pre id="console">Initializing LibrePS4 environment...</pre>
+        </div>
+
+        <!-- Payloads Section -->
+        <div class="payloads-section">
+            <h3 style="margin-bottom: 1rem; color: #fff;">Payloads & Tools</h3>
+            <div class="payloads-grid">
+                <button class="payload-btn goldhen"
+                    onclick="alert('GoldHEN loads automatically upon successful exploit.')">
+                    Status: Auto-Load
+                </button>
+                <!-- Add more payload buttons here in the future -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="credits">
+            Developed by <strong>Adrianodev</strong>, <strong>SergioDev</strong>, and <strong>Dklszdev</strong>
+        </div>
+        <p style="font-size: 0.8rem; opacity: 0.6;">&copy; 2025 LibrePS4 Project. Based on PSFree.</p>
+    </footer>
+
+    <!-- UI Logic Script -->
+    <script>
+        const statusMap = {
+            'UAF SSV': { id: 'webkit', text: 'Exploiting WebKit...', state: 'running' },
+            'leak CodeBlock': { id: 'webkit', text: 'Leaking Memory...', state: 'running' },
+            'arbitrary read/write': { id: 'webkit', text: 'WebKit Vulnerable!', state: 'success' },
+            'mmap': { id: 'kernel', text: 'Loading Loader...', state: 'running' },
+            'AIO Fixes Applied': { id: 'kernel', text: 'Kernel Patched', state: 'success' },
+            'GoldHEN Loaded': { id: 'goldhen', text: 'GoldHEN Active', state: 'success' }
+        };
+
+        function updateStatus(key) {
+            const config = statusMap[key];
+            if (!config) return;
+
+            const ind = document.getElementById(`ind-${config.id}`);
+            const text = document.getElementById(`text-${config.id}`);
+            const card = document.getElementById(`card-${config.id}`);
+
+            if (ind && text && card) {
+                text.innerText = config.text;
+                ind.className = `indicator ${config.state}`;
+                if (config.state === 'running') card.classList.add('active');
+                if (config.state === 'success') {
+                    card.classList.remove('active');
+                    // auto trigger next stage visuals if needed
+                    if (config.id === 'webkit') {
+                        document.getElementById('ind-kernel').className = 'indicator running';
+                        document.getElementById('text-kernel').innerText = 'Initializing...';
+                    }
+                }
+            }
+        }
+
+        // Intercept console appends to update UI
+        const consoleElem = document.getElementById('console');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length) {
+                    const text = mutation.addedNodes[0].textContent;
+                    // Check for key phrases in logs
+                    for (const key in statusMap) {
+                        if (text.includes(key)) {
+                            updateStatus(key);
+                        }
+                    }
+                }
+            });
+        });
+
+        observer.observe(consoleElem, { childList: true, characterData: true });
+    </script>
+    <script type="module" src="./alert.mjs"></script>
+</body>
+
+</html>

@@ -1,23 +1,150 @@
 <html manifest="psfree_lapse.cache">
 <head>
-<title>PSFree-Lapse Exploit For PS4 9.00</title>
-<link rel="shortcut icon" href="favicon.ico"></link>
-<style>
-body{background-image: url("bg.jpg");background-repeat: no-repeat;background-size:70%;background-position: center;background-color: white;
-color:black;font-size:20px;text-align:center;margin:0;overflow:hidden;}
-.info{overflow: hidden;position: fixed;position: absolute;top: 45%;left: 50%;font-size: 25px;font-family: sans-serif;color: black;transform: translate(-50%, -50%);}
-</style>
-<script>
-history.replaceState(null,null,'index.html');var histlength=history.length;history.go(-histlength);
-function DLProgress(e){Percent=(Math.round(e.loaded / e.total * 100));msgs.innerHTML="Installing Offline Cache ... " + Percent + "%"};
-function DisplayCacheProgress(){
-setTimeout(function(){msgs.innerHTML="Cache Installed Successfully";},2000);
-setTimeout(function(){location.reload();},3000);
-}
-window.applicationCache.addEventListener("progress",DLProgress,false);window.applicationCache.oncached=function(e){DisplayCacheProgress();};window.applicationCache.onupdateready=function(e){DisplayCacheProgress();};
-</script>
+    <title>Instalando SFree Cache</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-primary: #f8fafc;
+            --accent: #8b5cf6;
+            --progress-bg: #334155;
+            --progress-fill: #d946ef; /* Magenta */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #2e1065, var(--bg-color));
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* Banner de Mejora */
+        .promo-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(90deg, #7c3aed, #db2777);
+            color: white;
+            text-align: center;
+            padding: 8px 0;
+            font-weight: bold;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .cache-container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 80%;
+            max-width: 500px;
+            margin-top: 30px;
+        }
+
+        h2 {
+            margin-top: 0;
+            background: linear-gradient(to right, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        #msgs {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            font-variant-numeric: tabular-nums;
+            min-height: 1.5em;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background-color: var(--progress-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--progress-fill);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px var(--progress-fill);
+        }
+
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .creator {
+            color: #a78bfa;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        history.replaceState(null,null,'index.html');
+        var histlength=history.length;
+        history.go(-histlength);
+
+        function DLProgress(e){
+            var Percent = (Math.round(e.loaded / e.total * 100));
+            document.getElementById("msgs").innerHTML = "Descargando SFree Offline: " + Percent + "%";
+            document.getElementById("pbar").style.width = Percent + "%";
+        }
+
+        function DisplayCacheProgress(){
+            document.getElementById("pbar").style.width = "100%";
+            document.getElementById("pbar").style.backgroundColor = "#22c55e";
+            document.getElementById("msgs").innerHTML = "SFree Cache Instalada ✔️";
+            setTimeout(function(){
+                location.reload();
+            }, 2500);
+        }
+
+        window.applicationCache.addEventListener("progress", DLProgress, false);
+        window.applicationCache.oncached = function(e){DisplayCacheProgress();};
+        window.applicationCache.onupdateready = function(e){DisplayCacheProgress();};
+        window.applicationCache.onerror = function(e){
+            document.getElementById("msgs").innerHTML = "Error de Instalación";
+            document.getElementById("msgs").style.color = "#ef4444";
+        };
+    </script>
 </head>
-<body style=overflow:hidden>
-<div id=msgs class=info style='-webkit-font-feature-settings:"tnum";font-feature-settings:"tnum";'></div>
+<body>
+    <div class="promo-banner">
+        🚀 SFree: Mejor estabilidad y GUI superior al original
+    </div>
+
+    <div class="cache-container">
+        <h2>SFree Cache</h2>
+        
+        <div id="msgs">Iniciando descarga...</div>
+        
+        <div class="progress-track">
+            <div id="pbar" class="progress-bar"></div>
+        </div>
+
+        <div class="footer">
+            Creado por <span class="creator">AdrianodevSP</span> y <span class="creator">Dklszdev</span>
+        </div>
+    </div>
 </body>
 </html>

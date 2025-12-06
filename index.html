@@ -1,144 +1,291 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!-- Copyright (C) 2023-2025 anonymous -->
+<html>
 <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LibrePS4 - Advanced Exploit Suite</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SFree Exploit Host</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6; /* Morado para SFree */
+            --accent-glow: #a78bfa;
+            --error: #ef4444;
+            --success: #22c55e;
+            --terminal-bg: #000000;
+            --terminal-text: #22c55e;
+        }
+
+        @font-face {
+            font-family: 'logging';
+            src: url('fonts/LiberationMono-Regular.ttf');
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+                url('bg.jpg'); /* Fallback si existe, sino usa el color */
+            background-size: cover;
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Banner de Mejora */
+        .promo-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(90deg, #7c3aed, #db2777);
+            color: white;
+            text-align: center;
+            padding: 8px 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.15);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            margin-top: 40px; /* Espacio para el banner */
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2rem;
+            text-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        /* Firmware Detection Box */
+        .fw-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        .fw-label { color: var(--text-secondary); }
+        .fw-version { color: #fbbf24; font-weight: bold; }
+        .fw-status-ok { color: var(--success); font-weight: bold; }
+        .fw-status-fail { color: var(--error); font-weight: bold; }
+
+        /* Terminal Style */
+        #console-container {
+            background-color: var(--terminal-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 250px;
+            overflow-y: auto;
+            text-align: left;
+            border: 1px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        #console {
+            font-family: 'logging', 'Courier New', monospace;
+            color: var(--terminal-text);
+            font-size: 13px;
+            margin: 0;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        .footer {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+        }
+
+        .creator {
+            color: var(--accent-glow);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Device Error Overlay */
+        #device-error {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .error-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .error-title { font-size: 2rem; color: var(--error); margin-bottom: 1rem; }
+        .device-info { margin-top: 1rem; font-family: monospace; background: #000; padding: 0.5rem; border-radius: 4px; color: #fbbf24; }
+    </style>
     <script>
         if (window.applicationCache.status == '0') {
             window.location.replace("cache.html");
         }
-    </script>
-</head>
 
-<body>
-    <header>
-        <a href="index.html" class="logo">LibrePS4</a>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="about.html" data-jslicense="1">About</a>
-        </nav>
-    </header>
+        function initSystem() {
+            checkDeviceAndFW();
+        }
 
-    <main>
-        <!-- Status Dashboard -->
-        <div class="status-dashboard">
-            <div class="status-card" id="card-webkit">
-                <span class="card-title">Exploit Chain</span>
-                <span class="card-value">
-                    <div class="indicator" id="ind-webkit"></div>
-                    <span id="text-webkit">Waiting...</span>
-                </span>
-            </div>
-            <div class="status-card" id="card-kernel">
-                <span class="card-title">Kernel Access</span>
-                <span class="card-value">
-                    <div class="indicator" id="ind-kernel"></div>
-                    <span id="text-kernel">Pending</span>
-                </span>
-            </div>
-            <div class="status-card" id="card-goldhen">
-                <span class="card-title">GoldHEN</span>
-                <span class="card-value">
-                    <div class="indicator" id="ind-goldhen"></div>
-                    <span id="text-goldhen">Not Loaded</span>
-                </span>
-            </div>
-        </div>
+        function checkDeviceAndFW() {
+            const ua = navigator.userAgent;
+            const errorOverlay = document.getElementById('device-error');
+            const fwDisplay = document.getElementById('fw-display');
+            const statusDisplay = document.getElementById('status-display');
+            
+            // Regex para extraer versión
+            // PS4: "PlayStation 4 9.00"
+            // PS5: "PlayStation 5/7.61"
+            const ps4Regex = /PlayStation 4 ([\d\.]+)/;
+            const ps5Regex = /PlayStation 5\/([\d\.]+)/;
 
-        <div class="hero">
-            <h1>LibrePS4 Project</h1>
-            <p>Una versión de PSFree llamada LibrePS4 con mejor interfaz, más responsiva y estable.</p>
-        </div>
+            const isPS4 = ps4Regex.test(ua);
+            const isPS5 = ps5Regex.test(ua);
+            
+            // Bloqueo de dispositivos no consola
+            if (!isPS4 && !isPS5) {
+                errorOverlay.style.display = "flex";
+                let platform = "Desconocido";
+                if (ua.indexOf("Android") !== -1) platform = "Android";
+                else if (ua.indexOf("Windows") !== -1) platform = "PC Windows";
+                else if (ua.indexOf("iPhone") !== -1) platform = "iOS";
+                document.getElementById('detected-device').textContent = platform;
+                throw new Error("Dispositivo no compatible.");
+            }
 
-        <!-- Console Output -->
-        <div class="console-wrapper">
-            <div class="console-header">
-                <div class="traffic-lights">
-                    <div class="light red"></div>
-                    <div class="light yellow"></div>
-                    <div class="light green"></div>
-                </div>
-                <span class="console-title">system_log --verbose</span>
-            </div>
-            <pre id="console">Initializing LibrePS4 environment...</pre>
-        </div>
+            let version = "0.00";
+            let consoleType = "";
 
-        <!-- Payloads Section -->
-        <div class="payloads-section">
-            <h3 style="margin-bottom: 1rem; color: #fff;">Payloads & Tools</h3>
-            <div class="payloads-grid">
-                <button class="payload-btn goldhen"
-                    onclick="alert('GoldHEN loads automatically upon successful exploit.')">
-                    Status: Auto-Load
-                </button>
-                <!-- Add more payload buttons here in the future -->
-            </div>
-        </div>
-    </main>
+            if (isPS4) {
+                version = ua.match(ps4Regex)[1];
+                consoleType = "PS4";
+            } else if (isPS5) {
+                version = ua.match(ps5Regex)[1];
+                consoleType = "PS5";
+            }
 
-    <footer>
-        <div class="credits">
-            Developed by <strong>Adrianodev</strong>, <strong>SergioDev</strong>, and <strong>Dklszdev</strong>
-        </div>
-        <p style="font-size: 0.8rem; opacity: 0.6;">&copy; 2025 LibrePS4 Project. Based on PSFree.</p>
-    </footer>
+            // Mostrar info en pantalla
+            fwDisplay.innerHTML = `${consoleType} <span class="fw-version">${version}</span>`;
 
-    <!-- UI Logic Script -->
-    <script>
-        const statusMap = {
-            'UAF SSV': { id: 'webkit', text: 'Exploiting WebKit...', state: 'running' },
-            'leak CodeBlock': { id: 'webkit', text: 'Leaking Memory...', state: 'running' },
-            'arbitrary read/write': { id: 'webkit', text: 'WebKit Vulnerable!', state: 'success' },
-            'mmap': { id: 'kernel', text: 'Loading Loader...', state: 'running' },
-            'AIO Fixes Applied': { id: 'kernel', text: 'Kernel Patched', state: 'success' },
-            'GoldHEN Loaded': { id: 'goldhen', text: 'GoldHEN Active', state: 'success' }
-        };
-
-        function updateStatus(key) {
-            const config = statusMap[key];
-            if (!config) return;
-
-            const ind = document.getElementById(`ind-${config.id}`);
-            const text = document.getElementById(`text-${config.id}`);
-            const card = document.getElementById(`card-${config.id}`);
-
-            if (ind && text && card) {
-                text.innerText = config.text;
-                ind.className = `indicator ${config.state}`;
-                if (config.state === 'running') card.classList.add('active');
-                if (config.state === 'success') {
-                    card.classList.remove('active');
-                    // auto trigger next stage visuals if needed
-                    if (config.id === 'webkit') {
-                        document.getElementById('ind-kernel').className = 'indicator running';
-                        document.getElementById('text-kernel').innerText = 'Initializing...';
-                    }
-                }
+            // Lógica de compatibilidad (El exploit proporcionado es para 9.00)
+            // Puedes ajustar los rangos según necesites.
+            if (consoleType === "PS4" && version === "9.00") {
+                statusDisplay.innerHTML = "COMPATIBLE";
+                statusDisplay.className = "fw-status-ok";
+                logToConsole(`[INFO] Detectado ${consoleType} v${version}. Sistema listo.`);
+            } else {
+                statusDisplay.innerHTML = "NO RECOMENDADO";
+                statusDisplay.className = "fw-status-fail";
+                logToConsole(`[ALERTA] Tu firmware es ${version}. Este host es para 9.00.`);
+                logToConsole(`[ALERTA] Proceda bajo su propio riesgo.`);
             }
         }
 
-        // Intercept console appends to update UI
-        const consoleElem = document.getElementById('console');
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.addedNodes.length) {
-                    const text = mutation.addedNodes[0].textContent;
-                    // Check for key phrases in logs
-                    for (const key in statusMap) {
-                        if (text.includes(key)) {
-                            updateStatus(key);
-                        }
-                    }
-                }
-            });
-        });
-
-        observer.observe(consoleElem, { childList: true, characterData: true });
+        function logToConsole(msg) {
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.innerHTML += msg + "\n";
+        }
     </script>
-    <script type="module" src="./alert.mjs"></script>
-</body>
+</head>
+<body onload="initSystem()">
 
+    <!-- Banner Promocional -->
+    <div class="promo-banner">
+        🚀 SFree: Una mejora con mayor estabilidad (80%+) y mejor GUI que el PSFree original
+    </div>
+
+    <!-- Error Overlay -->
+    <div id="device-error">
+        <div class="error-icon">⛔</div>
+        <div class="error-title">Acceso Denegado</div>
+        <div style="color: #94a3b8; font-size: 1.2rem;">SFree solo funciona en consolas PlayStation.</div>
+        <div class="device-info">Tu dispositivo: <span id="detected-device">...</span></div>
+    </div>
+
+    <!-- Main Interface -->
+    <div class="container">
+        <h1>SFree 9.00</h1>
+        <div class="subtitle">Super Stable Exploit Chain</div>
+
+        <!-- Firmware Info Box -->
+        <div class="fw-box">
+            <div>
+                <span class="fw-label">Firmware:</span>
+                <span id="fw-display">Detectando...</span>
+            </div>
+            <div>
+                <span class="fw-label">Estado:</span>
+                <span id="status-display">...</span>
+            </div>
+        </div>
+
+        <div id="console-container">
+            <pre id='console'>Iniciando SFree Kernel Loader...
+Cargando módulos de memoria...
+</pre>
+        </div>
+
+        <div class="footer">
+            Desarrollado por <span class="creator">&nbsp;AdrianodevSP&nbsp;</span> y <span class="creator">&nbsp;Dklszdev</span>
+        </div>
+        
+        <div style="margin-top: 10px; font-size: 11px;">
+            <a href='./about.html' style="color: #64748b; text-decoration: none;">Basado en PSFree (Anonymous)</a>
+        </div>
+    </div>
+
+    <script type='module' src='./alert.mjs'></script>
+</body>
 </html>

